@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap'); */
+
+@layer base {
+  html,
+  body,
+  #root {
+    @apply w-full h-full;
+  }
+
+  html {
+    @apply font-serif text-sm;
+    font-family: "Roboto", sans-serif;
+  }
+
+  body {
+    @apply bg-zinc-900 select-none;
+  }
+
+  #root {
+    @apply flex justify-center items-center relative;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    @apply opacity-100;
+  }
+
+  .cnt-block {
+    @apply flex h-full bg-zinc-800 min-w-[260px];
+  }
+
+  .scrollbar::-webkit-scrollbar {
+    @apply w-2 bg-zinc-800 rounded-lg;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    @apply rounded-lg bg-zinc-700;
+  }
+
+  .scrollbar::-webkit-scrollbar-corner {
+    @apply bg-opacity-0;
+  }
+
+  .input__string {
+    @apply text-white min-h-[25px] text-center bg-zinc-700 rounded-md;
+  }
+
+  .input__checkbox:checked + span {
+    @apply bg-green-700;
+  }
+
+  .input__checkbox:disabled + span {
+    @apply hidden;
+  }
+
+  .content-field {
+    @apply bg-zinc-900 flex text-white rounded-md;
+  }
+
+  .cnt__select {
+    @apply relative bg-zinc-700 rounded;
+  }
+
+  .cnt__select:focus,
+  .cnt__select:focus-visible,
+  .cnt__select:focus > :nth-child(2) {
+    outline: -webkit-focus-ring-color auto 1px;
+  }
+
+  .button__select {
+    @apply w-full h-full py-1 px-2 rounded flex justify-between items-center;
+  }
+
+  .button__select.active {
+    @apply bg-green-700;
+  }
+
+  .list-mark::before {
+    content: "";
+    position: relative;
+    display: inline-block;
+    height: 0.4em;
+    width: 0.4em;
+    border-radius: 50%;
+    background-color: #fff;
+    margin-right: 0.25em;
+    margin-left: 0.25em;
+  }
+}
