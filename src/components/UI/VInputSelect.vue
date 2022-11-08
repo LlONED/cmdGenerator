@@ -3,7 +3,7 @@
     class="cnt__select"
     @blur="open = false"
     @click="clickHandler()"
-    @keydown="toggleAciveSelect($event.code, $event)"
+    @keydown="toggleAciveSelect($event)"
   >
     <div class="button__select">
       <span>{{ defaultOption }}</span>
@@ -16,8 +16,8 @@
         :key="Math.floor(Math.random() * 100000000)"
         :class="{
           button__select: true,
-          'hover:bg-zinc-600': option === activeOption ? false : true,
-          active: option === activeOption,
+          'hover:bg-zinc-600': option === selectedOption ? false : true,
+          active: option === selectedOption,
         }"
         @click.stop="select(option)"
       >
@@ -34,7 +34,7 @@
     data() {
       return {
         open: false,
-        activeOption: this.defaultOption,
+        selectedOption: this.defaultOption,
       };
     },
 
@@ -54,28 +54,28 @@
       clickHandler() {
         this.open = !this.open;
 
-        if (this.activeOption !== this.defaultOption) {
-          this.select(this.activeOption);
+        if (this.selectedOption !== this.defaultOption) {
+          this.select(this.selectedOption);
         }
       },
 
-      toggleAciveSelect(code, e) {
+      toggleAciveSelect(e) {
         if (this.open === false) return;
 
-        switch (code) {
+        switch (e.code) {
           case "KeyW":
           case "ArrowUp": {
             e.preventDefault();
             let index = this.options.findIndex(
-              (el) => el === this.activeOption
+              (el) => el === this.selectedOption
             );
 
             if (index === 0) {
-              this.activeOption = this.options.at(-1);
+              this.selectedOption = this.options.at(-1);
               return;
             }
 
-            this.activeOption = this.options[index - 1];
+            this.selectedOption = this.options[index - 1];
             return;
           }
 
@@ -83,15 +83,15 @@
           case "ArrowDown": {
             e.preventDefault();
             let index = this.options.findIndex(
-              (el) => el === this.activeOption
+              (el) => el === this.selectedOption
             );
 
             if (index === this.options.length - 1) {
-              this.activeOption = this.options[0];
+              this.selectedOption = this.options[0];
               return;
             }
 
-            this.activeOption = this.options[index + 1];
+            this.selectedOption = this.options[index + 1];
             return;
           }
         }
@@ -103,7 +103,7 @@
           return;
         }
 
-        this.activeOption = name;
+        this.selectedOption = name;
         this.$emit("input", name);
         this.open = false;
       },
@@ -111,14 +111,14 @@
 
     watch: {
       defaultOption() {
-        if (this.activeOption !== this.defaultOption) {
-          this.activeOption = this.defaultOption;
+        if (this.selectedOption !== this.defaultOption) {
+          this.selectedOption = this.defaultOption;
         }
       },
 
       open(value) {
         if (value === false) {
-          this.activeOption = this.defaultOption;
+          this.selectedOption = this.defaultOption;
         }
       },
     },
