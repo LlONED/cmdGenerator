@@ -136,8 +136,8 @@
       actionsUpdate({
         action = connectionAction,
         userActions = [{ action: userAction, id: "", name: "" }],
-        meta = {},
       }) {
+
         for (const action of userActions) {
           this.actionUpdate(action);
         }

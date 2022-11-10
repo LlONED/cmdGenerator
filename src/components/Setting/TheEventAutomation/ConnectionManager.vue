@@ -153,6 +153,14 @@
                 this.heartbeatStart();
 
                 const guild = d.guilds.find((el) => el.id === this.serverId);
+                const channel = guild.channels.find(
+                  (el) => el.id === this.voiceChatId
+                );
+
+                if (channel === undefined) {
+                  this.errorLog("Канал не найден");
+                  this.wsClose();
+                }
 
                 this.actionsUpdate({
                   action: connectionAction.Init,
@@ -173,11 +181,6 @@
                         ),
                       };
                     }),
-                  meta: {
-                    channelName:
-                      guild.channels.find((el) => el.id === this.voiceChatId)
-                        ?.name || "channel_not_found",
-                  },
                 });
 
                 return;
@@ -259,7 +262,9 @@
             };
 
             ws.onerror = (error) => {
-              this.errorLog(error?.message || error?.msg || "ошибка сокетов");
+              this.errorLog(
+                error?.message || error?.msg || "ошибка в потоке сокетов"
+              );
               this.wsClose();
             };
 
@@ -276,12 +281,19 @@
 
       heartbeatStart() {
         heartbeatInterval = setInterval(() => {
-          const payload = JSON.stringify({
-            op: 1,
-            d: null,
-          });
+          try {
+            const payload = JSON.stringify({
+              op: 1,
+              d: null,
+            });
 
-          ws.send(payload);
+            ws.send(payload);
+          } catch (error) {
+            this.errorLog(
+              error?.message || error?.msg || "ошибка в обновлении сокетов"
+            );
+            this.wsClose();
+          }
         }, heartbeatDelay);
       },
 
