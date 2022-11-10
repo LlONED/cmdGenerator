@@ -103,9 +103,6 @@ export default createStore({
         command: getters.command,
         commandPattern: getters.commandPattern,
         commandSeparator: getters.commandSeparator,
-        minutesPerPeriod: getters.currentPresetEvent.minutesPerPeriod,
-        coinsDefault: getters.defaultCoins,
-        isEventHasTimeType: getters.currentPresetEvent.type === eventType.Time,
         users: getters.activeUsers,
       });
     },

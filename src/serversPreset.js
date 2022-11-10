@@ -3,6 +3,7 @@ import { eventType, eventName } from "@/types/event";
 function eventDefaultPreset({
   coinsDefault = 0,
   minutesPerPeriod = 1,
+  coinsPerPeriod = 0,
   isCommandPersonal = false,
   commandPattern = "",
   commandSeparator = "",
@@ -13,6 +14,7 @@ function eventDefaultPreset({
   return {
     coinsDefault,
     minutesPerPeriod,
+    coinsPerPeriod,
     isCommandPersonal,
     commandPattern,
     commandSeparator,
@@ -59,16 +61,25 @@ export default {
         coinsDefault: 10,
         matchCase: ["свояк", "своя игра", "codenames", "пазлы"],
       }),
+      [eventName.Default_close]: eventDefaultPreset({
+        type: eventType.Time,
+        minutesPerPeriod: 20,
+        coinsPerPeriod: 10,
+        isCommandPersonal: true,
+        commandPattern: "пользователь:%user% количество:%count%",
+        command: "/give",
+        matchCase: ["close", "клоз"],
+      }),
       [eventName.Film]: eventDefaultPreset({
         type: eventType.Time,
-        coinsDefault: 10,
         minutesPerPeriod: 20,
+        coinsPerPeriod: 10,
         matchCase: ["смотр", "фильм"],
       }),
       [eventName.DBD_pub_close]: eventDefaultPreset({
         type: eventType.Time,
-        coinsDefault: 10,
         minutesPerPeriod: 20,
+        coinsPerPeriod: 10,
         isCommandPersonal: true,
         commandPattern: "пользователь:%user% количество:%count%",
         command: "/give",

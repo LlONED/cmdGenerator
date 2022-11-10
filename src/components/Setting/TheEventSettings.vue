@@ -75,6 +75,7 @@
   import OptionModal from "@/components/Setting/OptionModal.vue";
   import OptionConfigurable from "@/components/Setting/OptionConfigurable.vue";
   import TimeResult from "@/components/Time/TimeResult.vue";
+  import { eventType } from "@/types/event";
 
   export default {
     components: {
@@ -160,6 +161,7 @@
       ...mapGetters({
         currentServer: "currentServer",
         currentPreset: "currentPreset",
+        currentPresetEvent: "currentPresetEvent",
         servers: "servers",
         isEventActive: "isEventActive",
         eventsTime: "eventsTime",
@@ -198,8 +200,16 @@
     created() {
       this.updaterAddFunction(() => {
         this.updateUsers((user) => {
-          if (user.isActive)
+          if (user.isActive) {
             user.times.online = onlineTimeActions(user.times.actions).events.ms;
+
+            if (this.currentPresetEvent.type === eventType.Time) {
+              const minutes = user.times.online / 1000 / 60;
+              user.coins =
+                Math.floor(minutes / this.currentPresetEvent.minutesPerPeriod) *
+                this.currentPresetEvent.coinsPerPeriod;
+            }
+          }
           return user;
         });
       });

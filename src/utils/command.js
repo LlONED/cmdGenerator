@@ -5,10 +5,6 @@ function validatePlaceholders(
     count: 0,
     i: 0,
     prizeCount: 1,
-    coinsDefault: 0,
-    minutesPerPeriod: 1,
-    onlineTime: 0,
-    isEventHasTimeType: false,
   }
 ) {
   const placeholders = [
@@ -30,32 +26,9 @@ function validatePlaceholders(
     },
     {
       desc: "%count%",
-      required: [
-        "count",
-        "prizeCount",
-        "coinsDefault",
-        "minutesPerPeriod",
-        "onlineTime",
-        "isEventHasTimeType",
-      ],
+      required: ["count", "prizeCount"],
       pattern: new RegExp("%count%", "g"),
-      logic(
-        str = "",
-        count = 0,
-        prizeCount = 1,
-        coinsDefault = 0,
-        minutesPerPeriod = 1,
-        onlineTime = 0,
-        isEventHasTimeType = false
-      ) {
-        if (isEventHasTimeType === true) {
-          const minutes = onlineTime / 1000 / 60;
-          return str.replace(
-            this.pattern,
-            Math.floor(minutes / minutesPerPeriod) * coinsDefault * prizeCount
-          );
-        }
-
+      logic(str = "", count = 0, prizeCount = 1) {
         return str.replace(this.pattern, count * prizeCount);
       },
     },
@@ -76,9 +49,6 @@ export function formatCommadResult({
   commandSeparator,
   commandPattern,
   command,
-  minutesPerPeriod,
-  coinsDefault,
-  isEventHasTimeType,
   users,
 }) {
   if (isCommandPersonal === true) {
@@ -91,10 +61,6 @@ export function formatCommadResult({
             id: user.id,
             count: user.coins,
             prizeCount: user.prizeCount,
-            minutesPerPeriod,
-            coinsDefault,
-            isEventHasTimeType,
-            onlineTime: user.times.online,
             i,
           })
       )
@@ -108,10 +74,6 @@ export function formatCommadResult({
         id: user.id,
         count: user.coins,
         prizeCount: user.prizeCount,
-        minutesPerPeriod,
-        coinsDefault,
-        isEventHasTimeType,
-        onlineTime: user.times.online,
         i,
       })
     )

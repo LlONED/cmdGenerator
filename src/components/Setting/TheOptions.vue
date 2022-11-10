@@ -40,6 +40,17 @@
       />
     </option-input>
 
+    <option-input
+      description="Коинов в периоде"
+      v-if="currentEvent.type === eventType.Time"
+    >
+      <v-input-number
+        :min="0"
+        :value="currentEvent.coinsPerPeriod"
+        @input="setCoinsPerPeriod"
+      />
+    </option-input>
+
     <option-input description="Дефолтное количество выдач">
       <v-input-number
         :value="defaultPrizeCount"
@@ -129,6 +140,13 @@
       setMinutesPerPeriod(value) {
         this.updateCurrentPreset((preset) => {
           preset.events[preset.currentEvent].minutesPerPeriod = +value;
+          return preset;
+        });
+      },
+
+      setCoinsPerPeriod(value) {
+        this.updateCurrentPreset((preset) => {
+          preset.events[preset.currentEvent].coinsPerPeriod = +value;
           return preset;
         });
       },
