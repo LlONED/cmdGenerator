@@ -85,215 +85,216 @@
           case connectionStatus.Disconnect:
           case connectionStatus.Init: {
             await this.setLoading(5000);
-
-            ws = new WebSocket("wss://gateway.discord.gg/?v=9&encoding=json");
-
-            const payload = JSON.stringify({
-              op: 2,
-              d: {
-                token: this.token,
-                properties: {
-                  $os: "windows",
-                  $browser: "chrome",
-                  $device: "pc",
-                },
-              },
-            });
-
-            const closeTimeout = setTimeout(() => {
-              this.errorLog(connectionErrorMessage.FailedConnect);
-              this.wsClose();
-            }, 5000);
-
-            ws.onopen = function () {
-              ws.send(payload);
-            };
-
-            ws.onmessage = ({ data }) => {
-              const { t, s, op, d } = JSON.parse(data);
-
-              if (op === 10) {
-                heartbeatDelay = d.heartbeat_interval - 500;
-                return;
-              }
-
-              if (op === 9) {
-                this.errorLog("Ошибка сессии");
-                this.wsClose();
-
-                return;
-              }
-
-              if (op === 7) {
-                this.errorLog("Требуется переподключение");
-                this.wsClose();
-
-                return;
-              }
-
-              if (
-                t === "READY" &&
-                d.guilds.some((el) => el.id === this.serverId)
-              ) {
-                const payload = JSON.stringify({
-                  op: 14,
-                  d: {
-                    guild_id: this.serverId,
-                    activities: true,
-                    threads: true,
-                    typing: true,
-                  },
-                });
-
-                ws.send(payload);
-
-                clearTimeout(closeTimeout);
-
-                this.status = connectionStatus.Connect;
-                this.heartbeatStart();
-
-                const guild = d.guilds.find((el) => el.id === this.serverId);
-                const channel = guild.channels.find(
-                  (el) => el.id === this.voiceChatId
-                );
-
-                if (channel === undefined) {
-                  this.errorLog("Канал не найден");
-                  this.wsClose();
-                }
-
-                this.actionsUpdate({
-                  action: connectionAction.Init,
-                  userActions: guild.voice_states
-                    .filter((el) => el.channel_id === this.voiceChatId)
-                    .map((el) => {
-                      const member = guild.members.find(
-                        (e) => e.user.id === el.user_id
-                      );
-
-                      return {
-                        action: userAction.Join,
-                        id: member.user.id,
-                        name: this.validateUserName(
-                          member.user.username,
-                          member.user.discriminator,
-                          member.nick
-                        ),
-                      };
-                    }),
-                });
-
-                return;
-              }
-
-              if (
-                t === "VOICE_STATE_UPDATE" &&
-                d.guild_id === this.serverId &&
-                (d.channel_id === this.voiceChatId || d.channel_id === null) &&
-                d.member.user.bot === false
-              ) {
-                const user = this.users.find((el) => el.id === d.user_id);
-
-                // join new user
-                if (user === undefined && this.voiceChatId === d.channel_id) {
-                  this.actionsUpdate({
-                    action: connectionAction.Update,
-                    userActions: [
-                      {
-                        action: userAction.Join,
-                        id: d.user_id,
-                        name: this.validateUserName(
-                          d.member.user.username,
-                          d.member.user.discriminator,
-                          d.member.nick
-                        ),
-                      },
-                    ],
-                  });
-                  return;
-                }
-
-                // join exist user
-                if (
-                  user !== undefined &&
-                  user.status !== userStatus.Online &&
-                  this.voiceChatId === d.channel_id
-                ) {
-                  this.actionsUpdate({
-                    action: connectionAction.Update,
-                    userActions: [
-                      {
-                        action: userAction.Join,
-                        id: d.user_id,
-                        name: this.validateUserName(
-                          d.member.user.username,
-                          d.member.user.discriminator,
-                          d.member.nick
-                        ),
-                      },
-                    ],
-                  });
-                  return;
-                }
-
-                // leave user
-                if (
-                  user !== undefined &&
-                  user.status === userStatus.Online &&
-                  d.channel_id === null
-                ) {
-                  this.actionsUpdate({
-                    action: connectionAction.Update,
-                    userActions: [
-                      {
-                        action: userAction.Leave,
-                        id: d.user_id,
-                        name: this.validateUserName(
-                          d.member.user.username,
-                          d.member.user.discriminator,
-                          d.member.nick
-                        ),
-                      },
-                    ],
-                  });
-                  return;
-                }
-              }
-            };
-
-            ws.onerror = (error) => {
-              this.errorLog(
-                error?.message || error?.msg || "ошибка в потоке сокетов"
-              );
-              this.wsClose();
-            };
-
+            this.connect({ isInit: true });
             return;
           }
 
           case connectionStatus.Connect: {
             await this.setLoading(5000);
-            this.wsClose();
+            this.disconnect();
             return;
           }
         }
       },
 
-      heartbeatStart() {
-        heartbeatInterval = setInterval(() => {
-          try {
+      connect(options = { isInit: false }) {
+        ws = new WebSocket("wss://gateway.discord.gg/?v=9&encoding=json");
+
+        const payload = JSON.stringify({
+          op: 2,
+          d: {
+            token: this.token,
+            properties: {
+              $os: "windows",
+              $browser: "chrome",
+              $device: "pc",
+            },
+          },
+        });
+
+        const closeTimeout = setTimeout(() => {
+          this.errorLog(connectionErrorMessage.FailedConnect);
+        }, 5000);
+
+        ws.onopen = function () {
+          ws.send(payload);
+        };
+
+        ws.onmessage = ({ data }) => {
+          const { t, s, op, d } = JSON.parse(data);
+
+          if (op === 10) {
+            heartbeatDelay = d.heartbeat_interval - 500;
+            return;
+          }
+
+          if (op === 9) {
+            this.errorLog("Ошибка сессии");
+            return;
+          }
+
+          if (op === 7) {
+            this.errorLog("Требуется переподключение");
+
+            return;
+          }
+
+          if (
+            options.isInit === true &&
+            t === "READY" &&
+            d.guilds.some((el) => el.id === this.serverId)
+          ) {
             const payload = JSON.stringify({
-              op: 1,
-              d: null,
+              op: 14,
+              d: {
+                guild_id: this.serverId,
+                activities: true,
+                threads: true,
+                typing: true,
+              },
             });
 
             ws.send(payload);
-          } catch (error) {
-            this.errorLog(
-              error?.message || error?.msg || "ошибка в обновлении сокетов"
+
+            clearTimeout(closeTimeout);
+
+            this.status = connectionStatus.Connect;
+            this.heartbeatStart();
+
+            const guild = d.guilds.find((el) => el.id === this.serverId);
+            const channel = guild.channels.find(
+              (el) => el.id === this.voiceChatId
             );
-            this.wsClose();
+
+            if (channel === undefined) {
+              this.errorLog("Канал не найден");
+            }
+
+            this.actionsUpdate({
+              action: connectionAction.Init,
+              userActions: guild.voice_states
+                .filter((el) => el.channel_id === this.voiceChatId)
+                .map((el) => {
+                  const member = guild.members.find(
+                    (e) => e.user.id === el.user_id
+                  );
+
+                  return {
+                    action: userAction.Join,
+                    id: member.user.id,
+                    name: this.validateUserName(
+                      member.user.username,
+                      member.user.discriminator,
+                      member.nick
+                    ),
+                  };
+                }),
+            });
+
+            return;
           }
+
+          if (
+            t === "VOICE_STATE_UPDATE" &&
+            d.guild_id === this.serverId &&
+            (d.channel_id === this.voiceChatId || d.channel_id === null) &&
+            d.member.user.bot === false
+          ) {
+            const user = this.users.find((el) => el.id === d.user_id);
+
+            // join new user
+            if (user === undefined && this.voiceChatId === d.channel_id) {
+              this.actionsUpdate({
+                action: connectionAction.Update,
+                userActions: [
+                  {
+                    action: userAction.Join,
+                    id: d.user_id,
+                    name: this.validateUserName(
+                      d.member.user.username,
+                      d.member.user.discriminator,
+                      d.member.nick
+                    ),
+                  },
+                ],
+              });
+              return;
+            }
+
+            // join exist user
+            if (
+              user !== undefined &&
+              user.status !== userStatus.Online &&
+              this.voiceChatId === d.channel_id
+            ) {
+              this.actionsUpdate({
+                action: connectionAction.Update,
+                userActions: [
+                  {
+                    action: userAction.Join,
+                    id: d.user_id,
+                    name: this.validateUserName(
+                      d.member.user.username,
+                      d.member.user.discriminator,
+                      d.member.nick
+                    ),
+                  },
+                ],
+              });
+              return;
+            }
+
+            // leave user
+            if (
+              user !== undefined &&
+              user.status === userStatus.Online &&
+              d.channel_id === null
+            ) {
+              this.actionsUpdate({
+                action: connectionAction.Update,
+                userActions: [
+                  {
+                    action: userAction.Leave,
+                    id: d.user_id,
+                    name: this.validateUserName(
+                      d.member.user.username,
+                      d.member.user.discriminator,
+                      d.member.nick
+                    ),
+                  },
+                ],
+              });
+              return;
+            }
+          }
+        };
+
+        ws.onerror = (error) => {
+          this.errorLog(
+            error?.message || error?.msg || "ошибка в потоке сокетов"
+          );
+        };
+      },
+
+      disconnect() {
+        this.wsClose();
+        return;
+      },
+
+      heartbeatStart() {
+        heartbeatInterval = setInterval(() => {
+          if (ws.readyState !== 1) {
+            this.disconnect();
+            this.connect();
+            return;
+          }
+
+          const payload = JSON.stringify({
+            op: 1,
+            d: null,
+          });
+
+          ws.send(payload);
         }, heartbeatDelay);
       },
 
@@ -315,6 +316,7 @@
 
       errorLog(errorText = "") {
         this.logs.push(errorText);
+        this.wsClose();
       },
 
       actionsUpdate(payload = {}) {
