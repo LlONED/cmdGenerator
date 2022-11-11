@@ -16,7 +16,19 @@
       </template>
 
       <template #options>
-        <v-button class="p-2" @click="eventTimeToggle">
+        <v-button
+          class="p-2"
+          @click="allEventsEndToggle"
+          v-if="isEventActive === false"
+        >
+          {{ isEventsStopped ? "начать" : "завершить" }}
+        </v-button>
+
+        <v-button
+          class="p-2"
+          @click="eventTimeToggle"
+          v-if="isEventsStopped === false"
+        >
           {{ isEventActive ? "стоп" : "старт" }}
         </v-button>
       </template>
@@ -67,6 +79,7 @@
     onlineTimeActions,
     onlineTimeLastEvent,
     toggleActionTimeLogic,
+    eventsEndToggleLogic,
   } from "@/utils/time";
 
   import CopyMixin from "@/mixins/copy";
@@ -97,9 +110,19 @@
         updaterStart: "updaterStart",
         updaterStop: "updaterStop",
         updaterAddFunction: "updaterAddFunction",
+        eventsEndToggle: "eventsEndToggle",
         eventActionToggle: "eventActionToggle",
         eventSetOnline: "eventSetOnline",
       }),
+
+      allEventsEndToggle() {
+        const isEventsStopped = this.isEventsStopped;
+        this.eventsEndToggle(isEventsStopped);
+        this.updateUsers((user) => {
+          user.times = eventsEndToggleLogic(user.times, isEventsStopped);
+          return user;
+        });
+      },
 
       setServerId(value) {
         this.updateCurrentPreset((preset) => {
@@ -163,9 +186,10 @@
         currentPreset: "currentPreset",
         currentPresetEvent: "currentPresetEvent",
         servers: "servers",
-        isEventActive: "isEventActive",
         eventsTime: "eventsTime",
         eventCount: "eventCount",
+        isEventActive: "isEventActive",
+        isEventsStopped: "isEventsStopped",
         isUpdaterActive: "isUpdaterActive",
       }),
 
@@ -178,13 +202,11 @@
       },
 
       formatedTitleTime() {
+        if (this.isEventsStopped === true)
+          return 'Нажмите "начать" для начала перерыва';
+
         const times = this.eventsTime;
-        const event =
-          times.actions.length === 1
-            ? undefined
-            : times.actions.at(-1).type === timeType.Event
-            ? times.actions.at(-1)
-            : times.actions.at(-2);
+        const event = times.actions.find((el) => el.type === timeType.Event);
 
         if (event === undefined) {
           return 'Нажмите "старт" для начала ивента';

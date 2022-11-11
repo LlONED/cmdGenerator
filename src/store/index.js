@@ -2,10 +2,13 @@ import { createStore } from "vuex";
 import { userAction, userStatus } from "@/types/user";
 import { timeType, IPoint } from "@/types/time";
 import { isEventActiveLogic, eventCountLogic } from "@/utils/event";
-import { toggleActionTimeLogic, addPointsTimeLogic } from "@/utils/time";
+import {
+  toggleActionTimeLogic,
+  addPointsTimeLogic,
+  eventsEndToggleLogic,
+} from "@/utils/time";
 import { formatCommadResult } from "@/utils/command";
 import serversPreset from "@/serversPreset";
-import { eventType } from "@/types/event";
 
 export default createStore({
   state: () => ({
@@ -121,6 +124,10 @@ export default createStore({
 
     isEventActive(state) {
       return isEventActiveLogic(state.eventsTime.actions);
+    },
+
+    isEventsStopped(state) {
+      return state.eventsTime.actions.at(-1).end !== -1;
     },
 
     isUpdaterActive(state) {
@@ -240,8 +247,8 @@ export default createStore({
       state.eventsTime.online = online;
     },
 
-    addPointTimeEvent(state, actions = [IPoint.action]) {
-      state.eventsTime = addPointsTimeLogic(state.eventsTime, actions);
+    eventsEndToggle(state, isEventStopped = false) {
+      state.eventsTime = eventsEndToggleLogic(state.eventsTime, isEventStopped);
     },
   },
   actions: {},

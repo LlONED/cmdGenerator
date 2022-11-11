@@ -124,3 +124,22 @@ export function addPointsTimeLogic(times = ITimes, pointActions = [IPoint.action
 
   return { actions, online: times.online };
 }
+
+export function eventsEndToggleLogic(times = ITimes, isEventsStopped = false) {
+  if (isEventsStopped === true) {
+    times.actions = [
+      ...times.actions,
+      {
+        type: timeType.Other,
+        index: -1,
+        start: Date.now(),
+        end: -1,
+        points: [],
+      },
+    ];
+    return times;
+  }
+
+  times.actions.at(-1).end = Date.now();
+  return times;
+}
